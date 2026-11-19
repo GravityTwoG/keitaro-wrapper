@@ -1,0 +1,16 @@
+# E2E overrides. Merged over docker-compose.yml by scripts/e2e.sh.
+# Keitaro values are hardcoded so the developer's .env can never point
+# Playwright tests at a real or shared tracker.
+services:
+  backend:
+    environment:
+      ENVIRONMENT: e2e
+      KEITARO_BASE_URL: http://keitaro-mock:8000/admin_api/v1
+      KEITARO_API_KEY: dev-api-key
+      DEFAULT_DOMAIN_ID: ""
+      DEFAULT_CAMPAIGN_GROUP_ID: ""
+      DEFAULT_TRAFFIC_SOURCE_ID: ""
+      GEO_REDIRECT_URL: https://google.com
+  keitaro-mock:
+    environment:
+      MOCK_KEITARO_API_KEY: dev-api-key

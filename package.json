@@ -1,0 +1,36 @@
+{
+  "name": "keitaro-wrapper",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "frontend",
+    "e2e"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "format": "npm --prefix frontend run format",
+    "format:check": "npm --prefix frontend run format:check",
+    "typecheck": "npm --prefix frontend run typecheck",
+    "knip": "npm --prefix frontend run knip",
+    "doctor": "npm --prefix frontend run doctor",
+    "typecheck:e2e": "npm --prefix e2e run typecheck",
+    "test:e2e": "bash scripts/e2e.sh",
+    "test:e2e:ui": "npm --prefix e2e run test:ui",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "frontend/**/*.{ts,tsx,js,jsx,json,css,html}": "bash -c 'npm --prefix frontend run format && npm --prefix frontend run lint:fix'",
+    "backend/**/*.py": "bash -c 'uv run --project backend ruff check --fix . && uv run --project backend ruff format .'"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.1"
+  }
+}

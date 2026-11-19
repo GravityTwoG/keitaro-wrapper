@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Builds
+dist/
+*.tsbuildinfo
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Tests
+test-results/
+playwright-report/
+blob-report/
+coverage/
+
+# Tooling / OS
+.DS_Store
+.idea/
+.vscode/
+*.log

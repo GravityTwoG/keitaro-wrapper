@@ -1,0 +1,92 @@
+[project]
+name = "keitaro-wrapper"
+version = "0.1.0"
+description = "Campaign creator and editor on top of the Keitaro Admin API"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.16.4",
+    "asyncpg>=0.30.0",
+    "fastapi>=0.116.1",
+    "httpx>=0.28.1",
+    "pydantic>=2.11.7",
+    "pydantic-settings>=2.10.1",
+    "python-slugify>=8.0.4",
+    "sqlalchemy[asyncio]>=2.0.41",
+    "uvicorn[standard]>=0.35.0",
+]
+
+[dependency-groups]
+dev = [
+    "asgi-lifespan>=2.1.0",
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "ruff>=0.12.5",
+    "testcontainers[postgres]>=4.13.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/keitaro_wrapper", "src/mock_keitaro"]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+markers = [
+    "integration: requires Docker (PostgreSQL via testcontainers)",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "ANN",
+    "ARG",
+    "ASYNC",
+    "B",
+    "C4",
+    "DTZ",
+    "E",
+    "F",
+    "I",
+    "PIE",
+    "PT",
+    "RET",
+    "RUF",
+    "S",
+    "SIM",
+    "T20",
+    "TID",
+    "UP",
+    "W",
+]
+ignore = [
+    "ANN401", # dynamically typed external payloads are validated separately
+    "RET504", # explicit return values are easier to debug
+    "RUF001", # Russian UI strings legitimately contain Cyrillic look-alikes
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"src/mock_keitaro/**" = ["S101", "ANN201", "ARG001"]
+"tests/**" = ["ANN001", "ANN201", "ANN202", "S101", "S105", "S106", "ARG001", "PLR2004"]
+"migrations/**" = ["ANN001", "ANN201", "E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["keitaro_wrapper", "mock_keitaro"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

@@ -1,0 +1,102 @@
+name: keitaro-wrapper
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: keitaro
+      POSTGRES_PASSWORD: keitaro
+      POSTGRES_DB: keitaro
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - keitaro_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keitaro -d keitaro"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  keitaro-mock:
+    build:
+      context: ./backend
+    command:
+      [
+        "uvicorn",
+        "mock_keitaro.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+      ]
+    environment:
+      MOCK_KEITARO_API_KEY: ${KEITARO_API_KEY:-dev-api-key}
+    ports:
+      - "127.0.0.1:${MOCK_KEITARO_PORT:-8001}:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      APP_NAME: Keitaro Wrapper
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: postgresql+asyncpg://keitaro:keitaro@db:5432/keitaro
+      KEITARO_BASE_URL: ${KEITARO_BASE_URL:-http://keitaro-mock:8000/admin_api/v1}
+      KEITARO_API_KEY: ${KEITARO_API_KEY:-dev-api-key}
+      KEITARO_TIMEOUT_SECONDS: ${KEITARO_TIMEOUT_SECONDS:-15}
+      DEFAULT_DOMAIN_ID: ${DEFAULT_DOMAIN_ID:-}
+      DEFAULT_CAMPAIGN_GROUP_ID: ${DEFAULT_CAMPAIGN_GROUP_ID:-}
+      DEFAULT_TRAFFIC_SOURCE_ID: ${DEFAULT_TRAFFIC_SOURCE_ID:-}
+      GEO_REDIRECT_URL: ${GEO_REDIRECT_URL:-https://google.com}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://localhost:5173}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/live')",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1/ >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  keitaro_db:
